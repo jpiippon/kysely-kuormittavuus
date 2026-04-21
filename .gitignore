@@ -1,0 +1,25 @@
+# Quarto cache/build artefacts
+.quarto/
+
+# raw data
+data/raw/
+
+# Legacy/non-used scripts
+old_scripts/
+
+# Generated report (keep tables/figures, but avoid bulky HTML asset bundles)
+output/report.html
+output/report_files/
+
+# R/RStudio
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj.user/
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+

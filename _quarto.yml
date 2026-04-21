@@ -1,0 +1,11 @@
+project:
+  type: default
+
+  # Intended destination for the generated HTML.
+  # (Quarto sometimes keeps the main .html in the project root; we also
+  # correct that via the post-render hook below.)
+  output-dir: output
+
+post-render:
+  - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/post-render-move-report.ps1
+
