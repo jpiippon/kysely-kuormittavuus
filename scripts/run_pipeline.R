@@ -77,7 +77,12 @@ main <- function() {
   p9 <- plot_burden_scatter_by_mita_lasta_and_synnytitko(df_long)
 
   # Overwrite the existing "01" figure used by report.html so the main figure improves.
-  save_plot_png(p1, file.path(out_figures_dir, "01_burden_trajectory_median_iqr.png"))
+  save_plot_png(
+    p1,
+    file.path(out_figures_dir, "01_burden_trajectory_median_iqr.png"),
+    width = 9,
+    height = 6
+  )
   save_plot_png(p0, file.path(out_figures_dir, "01_burden_heatmap_mean_median.png"), width = 6, height = 9)
   save_plot_png(p2, file.path(out_figures_dir, "02_burden_variation_spaghetti.png"), width = 12, height = 7)
   save_plot_png(p3, file.path(out_figures_dir, "03_synnyttiko_vastaaja_tarkasteltavan_lapsen.png"), width = 12, height = 6)
