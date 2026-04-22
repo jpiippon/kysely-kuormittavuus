@@ -1,69 +1,95 @@
 # ------------------------------------------------------------------------------
-# Shared styling helpers (kept intentionally simple for readable LinkedIn plots)
+# Premium LinkedIn Styling Helpers
 # ------------------------------------------------------------------------------
 
-col_navy <- "#002d5a"
-col_dark_blue <- "#2f4a73"
-col_steel <- "#4a7ba7"
-col_mid_blue <- "#6c8eb5"
-col_light_blue <- "#a3c1d9"
-col_pale_blue <- "#d0e1ef"
+# Tausta & tekstit (Lämmin, editoriaalinen ilme)
+col_bg           <- "#FAFAF7"  # Lämmin off-white
+col_ink          <- "#1B1F24"  # Otsikkojen lähes-musta
+col_text         <- "#2E3440"  # Leipäteksti
+col_muted        <- "#6B7280"  # Alaotsikot ja apu-tekstit
+col_grid         <- "#E7E5E0"  # Hillitty viivasto
+col_rule         <- "#CBC9C2"  # Erotinviivat
 
-col_orange <- "#CC5500"
-col_amber <- "#e8a317"
+# Datan värit (Yksi huomioväri, yksi neutraali)
+col_accent       <- "#B4532A"  # Terrakotta (päähuomio)
+col_accent_soft  <- "#E9C9B5"  # Terrakotan vaalea nauha (IQR)
+col_neutral      <- "#3D4A5C"  # Teräksensininen (vertailuryhmä / mediaani)
+col_neutral_soft <- "#C9CED6"  # Teräksen vaalea nauha
+col_dim          <- "#9AA0A6"  # Yksittäisten havaintojen kohina
 
-col_dark_text <- "#2a2a2a"
+# Gradientti kuplamatriisille
+col_scale_lo     <- "#EDE7DD"
+col_scale_mid    <- "#B89B7A"
+col_scale_hi     <- "#4A3B2A"
 
-# Premium heatmap palette (cool tones on white background)
-col_heat_low <- "#CFE9FF"
-col_heat_mid <- "#57A6D9"
-col_heat_high <- "#083B63"
-col_median_line <- "#5B6777"
+# Säilytetään vanhat aliakset, jotta muu mahdollinen koodi ei hajoa
+col_orange       <- col_accent
+col_mid_blue     <- col_neutral
+col_dark_blue    <- col_neutral
+col_steel        <- col_neutral
+col_light_blue   <- col_neutral_soft
+col_pale_blue    <- col_accent_soft
+col_navy         <- col_ink
+col_amber        <- col_accent
+col_dark_text    <- col_text
+col_heat_low     <- col_scale_lo
+col_heat_mid     <- col_scale_mid
+col_heat_high    <- col_scale_hi
+col_median_line  <- col_neutral
+col_border       <- col_rule
 
 theme_linkedin <- function() {
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 13) +
     theme(
-      plot.title = element_text(face = "bold", size = 18, hjust = 0),
-      plot.subtitle = element_text(color = "grey40", size = 11, hjust = 0),
-      plot.caption = element_text(color = "grey50", size = 9),
-      axis.title = element_text(size = 12, face = "bold"),
-      axis.text = element_text(size = 11, color = col_dark_text),
+      # Taustat
+      plot.background  = element_rect(fill = col_bg, color = NA),
+      panel.background = element_rect(fill = col_bg, color = NA),
+      
+      # Typografia
+      plot.title       = element_text(face = "bold", size = 18, hjust = 0, color = col_ink, margin = margin(b = 6)),
+      plot.subtitle    = element_text(size = 12, hjust = 0, color = col_muted, margin = margin(b = 20)),
+      plot.caption     = element_text(size = 9, hjust = 0, color = col_muted, margin = margin(t = 15)),
+      plot.title.position   = "plot",
+      plot.caption.position = "plot",
+      
+      # Akselit
+      axis.title.x = element_text(size = 10, face = "bold", color = col_muted, margin = margin(t = 10)),
+      axis.title.y = element_text(size = 10, face = "bold", color = col_muted, margin = margin(r = 10)),
+      axis.text    = element_text(size = 10, color = col_text),
+      
+      # Gridit
       panel.grid.major.x = element_blank(),
-      panel.grid.minor = element_blank(),
-      axis.line.x = element_line(color = "grey85"),
-      axis.line.y = element_line(color = "grey85"),
-      legend.position = "none",
-      plot.margin = margin(12, 14, 10, 10)
+      panel.grid.minor   = element_blank(),
+      panel.grid.major.y = element_line(color = col_grid, linewidth = 0.4),
+      
+      axis.line   = element_blank(),
+      axis.ticks  = element_blank(),
+      
+      # Legendit
+      legend.position   = "top",
+      legend.justification = "left",
+      legend.title      = element_blank(),
+      legend.text       = element_text(size = 11, color = col_text),
+      legend.key        = element_blank(),
+      legend.background = element_blank(),
+      
+      # Facet-otsikot
+      strip.text = element_text(size = 12, face = "bold", color = col_ink, hjust = 0, margin = margin(b = 8)),
+      
+      # Marginaalit
+      plot.margin = margin(20, 24, 16, 20)
     )
 }
 
-theme_linkedin_premium_heatmap <- function() {
-  theme_minimal(base_size = 14) +
-    theme(
-      plot.title = element_text(face = "bold", size = 20, hjust = 0),
-      plot.subtitle = element_text(color = "grey40", size = 11, hjust = 0),
-      plot.caption = element_text(color = "grey50", size = 9),
-      axis.title = element_text(size = 12, face = "bold"),
-      axis.text = element_text(size = 11, color = col_dark_text),
-      panel.background = element_rect(fill = "white", color = NA),
-      plot.background = element_rect(fill = "white", color = NA),
-      panel.grid.major.x = element_blank(),
-      panel.grid.major.y = element_line(color = "#EEF2F6", linewidth = 0.35),
-      panel.grid.minor = element_blank(),
-      axis.line = element_blank(),
-      legend.position = "right",
-      legend.title = element_text(size = 10, face = "bold"),
-      legend.text = element_text(size = 10),
-      plot.margin = margin(12, 14, 18, 10)
-    )
-}
+theme_linkedin_premium_heatmap <- theme_linkedin
 
 save_table_csv <- function(df, path) {
   dir.create(dirname(path), showWarnings = FALSE, recursive = TRUE)
   readr::write_csv(df, path)
 }
 
-save_plot_png <- function(plot, path, width = 12, height = 6, dpi = 320) {
+# 9x7 tuumaa toimii erinomaisesti LinkedIn-feedissä (lähes neliö mobiilissa)
+save_plot_png <- function(plot, path, width = 9, height = 7, dpi = 320) {
   dir.create(dirname(path), showWarnings = FALSE, recursive = TRUE)
-  ggsave(filename = path, plot = plot, width = width, height = height, dpi = dpi)
+  ggsave(filename = path, plot = plot, width = width, height = height, dpi = dpi, bg = col_bg)
 }

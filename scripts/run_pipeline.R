@@ -23,10 +23,8 @@ source(file.path(script_dir, "04_figures.R"), local = FALSE)
 # Sanity checks: fail fast if sourcing didn't bring the expected plotting functions.
 required_fns <- c(
   "plot_burden_heatmap_mean_median",
-  "plot_burden_responses_mean_ci",
+  "plot_burden_responses_mean_ci_premium",
   "plot_burden_variation_spaghetti",
-  "plot_burden_scatter_by_synnytitko",
-  "plot_burden_scatter_by_mita_lasta_and_synnytitko",
   "plot_synnytitko_tarkasteltavan_lapsen_v2",
   "plot_mita_lasta_tarkasteltavan_lapsen",
   "plot_syntyiko_lapselle_sisarus_ennen_3v",
@@ -66,19 +64,49 @@ main <- function() {
   # Figures
   # ---------------------------
   out_figures_dir <- file.path("output", "figures")
-  p1 <- plot_burden_responses_mean_ci(df_long)
+  p1_baseline <- if (exists("plot_burden_responses_mean_ci", mode = "function", inherits = FALSE)) {
+    plot_burden_responses_mean_ci(df_long)
+  } else {
+    NULL
+  }
+  p1_premium <- plot_burden_responses_mean_ci_premium(df_long)
   p0 <- plot_burden_heatmap_mean_median(df_long)
   p2 <- plot_burden_variation_spaghetti(df_long, df_summary)
   p3 <- plot_synnytitko_tarkasteltavan_lapsen_v2(df_clean)
   p4 <- plot_mita_lasta_tarkasteltavan_lapsen(df_clean)
   p5 <- plot_syntyiko_lapselle_sisarus_ennen_3v(df_clean)
   p7 <- plot_burden_responses_mean_ci_by_synnytitko(df_long)
-  p8 <- plot_burden_scatter_by_synnytitko(df_long)
-  p9 <- plot_burden_scatter_by_mita_lasta_and_synnytitko(df_long)
+  p8 <- if (exists("plot_burden_scatter_by_synnytitko", mode = "function", inherits = FALSE)) {
+    plot_burden_scatter_by_synnytitko(df_long)
+  } else {
+    NULL
+  }
+  p9 <- if (exists("plot_burden_scatter_by_mita_lasta_and_synnytitko", mode = "function", inherits = FALSE)) {
+    plot_burden_scatter_by_mita_lasta_and_synnytitko(df_long)
+  } else {
+    NULL
+  }
 
-  # Overwrite the existing "01" figure used by report.html so the main figure improves.
+  # Save an additional baseline (if available) and a premium version for safe comparison,
+  # then overwrite the main "01" figure with the premium one.
+  if (!is.null(p1_baseline)) {
+    save_plot_png(
+      p1_baseline,
+      file.path(out_figures_dir, "01_burden_trajectory_median_iqr_baseline.png"),
+      width = 9,
+      height = 6
+    )
+  }
+
   save_plot_png(
-    p1,
+    p1_premium,
+    file.path(out_figures_dir, "01_burden_trajectory_median_iqr_premium.png"),
+    width = 9,
+    height = 6
+  )
+
+  save_plot_png(
+    p1_premium,
     file.path(out_figures_dir, "01_burden_trajectory_median_iqr.png"),
     width = 9,
     height = 6
@@ -89,8 +117,12 @@ main <- function() {
   save_plot_png(p4, file.path(out_figures_dir, "04_mita_lasta_tama_vastaus_koskee.png"), width = 12, height = 6)
   save_plot_png(p5, file.path(out_figures_dir, "05_syntyiko_lapselle_sisarus_ennen_3_vuotta.png"), width = 12, height = 6)
   save_plot_png(p7, file.path(out_figures_dir, "07_burden_by_synnyttiko_facet.png"), width = 12, height = 6)
-  save_plot_png(p8, file.path(out_figures_dir, "08_burden_scatter_by_synnytitko.png"), width = 12, height = 6)
-  save_plot_png(p9, file.path(out_figures_dir, "09_burden_scatter_by_mita_lasta_and_synnytitko.png"), width = 12, height = 10)
+  if (!is.null(p8)) {
+    save_plot_png(p8, file.path(out_figures_dir, "08_burden_scatter_by_synnytitko.png"), width = 12, height = 6)
+  }
+  if (!is.null(p9)) {
+    save_plot_png(p9, file.path(out_figures_dir, "09_burden_scatter_by_mita_lasta_and_synnytitko.png"), width = 12, height = 10)
+  }
 }
 
 main()
