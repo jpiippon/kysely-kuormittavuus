@@ -23,14 +23,35 @@ plot_burden_responses_mean_ci_premium <- function(df_long) {
   # Haetaan dynaamisesti huippukohta annotaatiota varten
   peak <- df_stats |> slice_max(mean, n = 1, with_ties = FALSE)
 
+  # Mean-labelit kaikkiin ikävälilinjan pisteisiin (1 desimaali, pilkku).
+  nudge_pattern <- c(0.70, 0.40, 0.60, 0.30, 0.55, 0.25, 0.45, 0.35)
+  peak_order <- peak$age_interval_order[[1]]
+  df_stats <- df_stats |>
+    mutate(
+      mean_label = chartr(".", ",", sprintf("%.1f", mean)),
+      label_y = mean + nudge_pattern[row_number()] + 0.15,
+      label_y = if_else(age_interval_order == peak_order, pmin(mean + 0.50, 9.45), label_y),
+      label_y = pmin(label_y, 9.45)
+    )
+
+  n_by_age <- df_stats |> arrange(age_interval_order) |> pull(n)
+  age_labels_with_n <- sprintf("%s\n(n = %d)", age_labels_ordered, n_by_age)
+
   ggplot(df_stats, aes(x = age_interval_order)) +
     # 90 % vaihteluväli
     geom_ribbon(aes(ymin = q05, ymax = q95), fill = col_accent_soft, alpha = 0.55) +
     # Mean ensisijainen signaali
     geom_line(aes(y = mean), color = col_accent, linewidth = 2.2) +
     # Median selkeänä referenssinä
-    geom_line(aes(y = median), color = col_neutral, linewidth = 1.6, linetype = "dotted") +
+    # Mediaania ei piirretÃ¤ tÃ¤ssÃ¤ pÃ¤Ã¤kuvassa
     geom_point(aes(y = mean), shape = 21, size = 3.8, fill = col_bg, color = col_accent, stroke = 1.7) +
+    geom_text(
+      aes(y = label_y, label = mean_label),
+      size = 3.5,
+      fontface = "bold",
+      color = col_ink,
+      vjust = 0
+    ) +
     annotate(
       "segment",
       x = peak$age_interval_order, xend = peak$age_interval_order,
@@ -44,12 +65,12 @@ plot_burden_responses_mean_ci_premium <- function(df_long) {
       hjust = 0.5, vjust = 0, size = 3.8, color = col_ink, fontface = "bold", lineheight = 1.1
     ) +
     scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, by = 2), expand = expansion(mult = c(0.02, 0.05))) +
-    scale_x_continuous(breaks = seq_along(age_labels_ordered), labels = age_labels_ordered) +
+    scale_x_continuous(breaks = seq_along(age_labels_ordered), labels = age_labels_with_n) +
     labs(
       title = "Kuormitus huipentuu vauvan ollessa 3\u20136 kuukautta",
-      subtitle = "Keskiarvo (yhtenäinen viiva) ja 90 %:n vaihteluväli (vaalea nauha). Mediaani (katkoviiva).",
-      x = NULL, y = "Kuormitus (0\u201310)",
-      caption = sprintf("Kyselydata, n = %d vastaajaa.", max(df_stats$n))
+      subtitle = "Keskiarvo (viiva) ja vaihteluväli, johon 90 % vastauksista sijoittuu (punertava varjostus)",
+      x = "Lapsen ikä", y = "Kuormitus (0\u201310)",
+      caption = 'Vastaa tutkimuskysymykseen: "Kuinka kuormittavaksi koit arjen kussakin vaiheessa?", johon vastattiin asteikolla 0–10.'
     ) +
     theme_linkedin()
 }
@@ -188,6 +209,60 @@ plot_burden_responses_mean_ci_by_synnytitko <- function(df_long) {
       subtitle = "Keskiarvo (yhtenäinen viiva) ja 90 %:n vaihteluväli (nauha).",
       x = NULL, y = "Kuormitus (0\u201310)",
       caption = 'Ryhmittely perustuu kysymykseen: "Synnytitkö tarkasteltavan lapsen/lapset?"'
+    ) +
+  theme_linkedin()
+}
+
+# 3.1 Sivukuva 2.5: Keskiarvoviivat sen mukaan, mikä lapsi / lapset
+plot_burden_mean_by_mita_lasta <- function(df_long) {
+  age_labels_ordered <- c(
+    "0\u20133 vko", "3 vko\u20133 kk", "3\u20136 kk", "6\u201312 kk",
+    "12\u201318 kk", "18\u201324 kk", "24\u201330 kk", "30\u201336 kk"
+  )
+
+  ryhma_labels <- c(
+    "Ensimm\u00e4inen lapsi",
+    "Toinen tai my\u00f6hempi lapsi",
+    "Lapset yleisesti"
+  )
+
+  df_clean <- df_long |>
+    mutate(
+      ryhma = case_when(
+        str_detect(as.character(mita_lasta), regex("^Ensimm", ignore_case = TRUE)) ~ ryhma_labels[1],
+        str_detect(as.character(mita_lasta), regex("^Toista", ignore_case = TRUE)) ~ ryhma_labels[2],
+        str_detect(as.character(mita_lasta), regex("Lapsiani", ignore_case = TRUE)) ~ ryhma_labels[3],
+        TRUE ~ NA_character_
+      )
+    ) |>
+    mutate(ryhma = factor(ryhma, levels = ryhma_labels)) |>
+    filter(!is.na(ryhma), !is.na(burden))
+
+  df_stats <- df_clean |>
+    group_by(ryhma, age_interval_order) |>
+    summarise(
+      mean = mean(burden),
+      .groups = "drop"
+    )
+
+  pal <- c(col_accent, col_neutral, col_dim)
+  names(pal) <- ryhma_labels
+
+  ggplot(df_stats, aes(x = age_interval_order, y = mean, color = ryhma, group = ryhma)) +
+    geom_line(linewidth = 2.0) +
+    geom_point(shape = 21, size = 3.1, fill = col_bg, stroke = 1.4) +
+    scale_color_manual(values = pal) +
+    scale_y_continuous(
+      limits = c(0, 10),
+      breaks = seq(0, 10, by = 2),
+      expand = expansion(mult = c(0.02, 0.05))
+    ) +
+    scale_x_continuous(breaks = seq_along(age_labels_ordered), labels = age_labels_ordered) +
+    labs(
+      title = "Kuormitus keskim\u00e4\u00e4rin riippuu lapsij\u00e4rjestyksest\u00e4",
+      subtitle = "Keskiarvo (0\u201310) ik\u00e4v\u00e4lill\u00e4: Ensimm\u00e4inen lapsi, toinen tai my\u00f6hempi lapsi, lapset yleisesti.",
+      x = NULL, y = "Kuormitus (0\u201310)",
+      caption = NULL
     ) +
     theme_linkedin()
 }

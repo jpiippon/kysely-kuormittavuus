@@ -25,6 +25,7 @@ required_fns <- c(
   "plot_burden_responses_mean_ci_premium",
   "plot_burden_variation_spaghetti",
   "plot_burden_responses_mean_ci_by_synnytitko",
+  "plot_burden_mean_by_mita_lasta",
   "save_taustaprofiili_plot"
 )
 fn_exists <- logical(length(required_fns))
@@ -69,6 +70,7 @@ main <- function() {
   p1_premium <- plot_burden_responses_mean_ci_premium(df_long)
   p0 <- plot_burden_heatmap_mean_median(df_long)
   p2 <- plot_burden_variation_spaghetti(df_long, df_summary)
+  p6 <- plot_burden_mean_by_mita_lasta(df_long)
   p7 <- plot_burden_responses_mean_ci_by_synnytitko(df_long)
   p8 <- if (exists("plot_burden_scatter_by_synnytitko", mode = "function", inherits = FALSE)) {
     plot_burden_scatter_by_synnytitko(df_long)
@@ -98,8 +100,15 @@ main <- function() {
     width = 9,
     height = 6
   )
+  save_plot_png(
+    p1_premium,
+    file.path(out_figures_dir, "01 pääkuva.png"),
+    width = 9,
+    height = 6
+  )
   save_plot_png(p0, file.path(out_figures_dir, "01_burden_heatmap_mean_median.png"), width = 6, height = 9)
   save_plot_png(p2, file.path(out_figures_dir, "02_burden_variation_spaghetti.png"), width = 12, height = 7)
+  save_plot_png(p6, file.path(out_figures_dir, "06_burden_mean_by_mita_lasta.png"), width = 12, height = 6)
   save_plot_png(p7, file.path(out_figures_dir, "07_burden_by_synnyttiko_facet.png"), width = 12, height = 6)
   save_taustaprofiili_plot(
     df_clean,
