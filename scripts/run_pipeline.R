@@ -17,8 +17,7 @@ script_dir <- if (is.na(this_file) || !nzchar(this_file)) {
 source(file.path(script_dir, "00_helpers.R"), local = FALSE)
 source(file.path(script_dir, "01_load_clean.R"), local = FALSE)
 source(file.path(script_dir, "02_reshape_long.R"), local = FALSE)
-source(file.path(script_dir, "03_summary_table.R"), local = FALSE)
-source(file.path(script_dir, "04_figures.R"), local = FALSE)
+source(file.path(script_dir, "03_figures.R"), local = FALSE)
 
 # Sanity checks: fail fast if sourcing didn't bring the expected plotting functions.
 required_fns <- c(
@@ -28,7 +27,8 @@ required_fns <- c(
   "plot_synnytitko_tarkasteltavan_lapsen_v2",
   "plot_mita_lasta_tarkasteltavan_lapsen",
   "plot_syntyiko_lapselle_sisarus_ennen_3v",
-  "plot_burden_responses_mean_ci_by_synnytitko"
+  "plot_burden_responses_mean_ci_by_synnytitko",
+  "save_taustaprofiili_plot"
 )
 fn_exists <- logical(length(required_fns))
 for (i in seq_along(required_fns)) {
@@ -117,6 +117,10 @@ main <- function() {
   save_plot_png(p4, file.path(out_figures_dir, "04_mita_lasta_tama_vastaus_koskee.png"), width = 12, height = 6)
   save_plot_png(p5, file.path(out_figures_dir, "05_syntyiko_lapselle_sisarus_ennen_3_vuotta.png"), width = 12, height = 6)
   save_plot_png(p7, file.path(out_figures_dir, "07_burden_by_synnyttiko_facet.png"), width = 12, height = 6)
+  save_taustaprofiili_plot(
+    df_clean,
+    path = file.path(out_figures_dir, "00_taustaprofiili_yhdistetty.png")
+  )
   if (!is.null(p8)) {
     save_plot_png(p8, file.path(out_figures_dir, "08_burden_scatter_by_synnytitko.png"), width = 12, height = 6)
   }

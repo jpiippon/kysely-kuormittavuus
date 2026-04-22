@@ -66,8 +66,7 @@ Keep and use this structure:
 - `scripts/00_helpers.R`
 - `scripts/01_load_clean.R`
 - `scripts/02_reshape_long.R`
-- `scripts/03_summary_table.R`
-- `scripts/04_figures.R`
+- `scripts/03_figures.R`
 - `scripts/run_pipeline.R`
 
 Do not rename the `scripts` folder.
