@@ -24,9 +24,6 @@ required_fns <- c(
   "plot_burden_heatmap_mean_median",
   "plot_burden_responses_mean_ci_premium",
   "plot_burden_variation_spaghetti",
-  "plot_synnytitko_tarkasteltavan_lapsen_v2",
-  "plot_mita_lasta_tarkasteltavan_lapsen",
-  "plot_syntyiko_lapselle_sisarus_ennen_3v",
   "plot_burden_responses_mean_ci_by_synnytitko",
   "save_taustaprofiili_plot"
 )
@@ -72,9 +69,6 @@ main <- function() {
   p1_premium <- plot_burden_responses_mean_ci_premium(df_long)
   p0 <- plot_burden_heatmap_mean_median(df_long)
   p2 <- plot_burden_variation_spaghetti(df_long, df_summary)
-  p3 <- plot_synnytitko_tarkasteltavan_lapsen_v2(df_clean)
-  p4 <- plot_mita_lasta_tarkasteltavan_lapsen(df_clean)
-  p5 <- plot_syntyiko_lapselle_sisarus_ennen_3v(df_clean)
   p7 <- plot_burden_responses_mean_ci_by_synnytitko(df_long)
   p8 <- if (exists("plot_burden_scatter_by_synnytitko", mode = "function", inherits = FALSE)) {
     plot_burden_scatter_by_synnytitko(df_long)
@@ -100,22 +94,12 @@ main <- function() {
 
   save_plot_png(
     p1_premium,
-    file.path(out_figures_dir, "01_burden_trajectory_median_iqr_premium.png"),
-    width = 9,
-    height = 6
-  )
-
-  save_plot_png(
-    p1_premium,
     file.path(out_figures_dir, "01_burden_trajectory_median_iqr.png"),
     width = 9,
     height = 6
   )
   save_plot_png(p0, file.path(out_figures_dir, "01_burden_heatmap_mean_median.png"), width = 6, height = 9)
   save_plot_png(p2, file.path(out_figures_dir, "02_burden_variation_spaghetti.png"), width = 12, height = 7)
-  save_plot_png(p3, file.path(out_figures_dir, "03_synnyttiko_vastaaja_tarkasteltavan_lapsen.png"), width = 12, height = 6)
-  save_plot_png(p4, file.path(out_figures_dir, "04_mita_lasta_tama_vastaus_koskee.png"), width = 12, height = 6)
-  save_plot_png(p5, file.path(out_figures_dir, "05_syntyiko_lapselle_sisarus_ennen_3_vuotta.png"), width = 12, height = 6)
   save_plot_png(p7, file.path(out_figures_dir, "07_burden_by_synnyttiko_facet.png"), width = 12, height = 6)
   save_taustaprofiili_plot(
     df_clean,
@@ -126,6 +110,91 @@ main <- function() {
   }
   if (!is.null(p9)) {
     save_plot_png(p9, file.path(out_figures_dir, "09_burden_scatter_by_mita_lasta_and_synnytitko.png"), width = 12, height = 10)
+  }
+
+  # ---------------------------
+  # Alternative figures (03.1) - saved separately so we don't overwrite current outputs.
+  # ---------------------------
+  alt_figures_path <- file.path(script_dir, "03.1 alternative for figures.r")
+  if (file.exists(alt_figures_path)) {
+    out_figures_dir_alt <- file.path("output", "figures_alt")
+
+    # Source into an isolated environment to avoid function name collisions with 03_figures.R.
+    alt_env <- new.env(parent = .GlobalEnv)
+    source(alt_figures_path, local = alt_env)
+
+    alt_required_fns <- c(
+      "plot_burden_responses_mean_ci_premium",
+      "plot_burden_variation_spaghetti",
+      "plot_synnytitko_tarkasteltavan_lapsen_v2",
+      "plot_mita_lasta_tarkasteltavan_lapsen",
+      "plot_syntyiko_lapselle_sisarus_ennen_3v",
+      "plot_burden_responses_mean_ci_by_synnytitko",
+      "save_taustaprofiili_plot"
+    )
+
+    alt_fn_exists <- logical(length(alt_required_fns))
+    for (i in seq_along(alt_required_fns)) {
+      alt_fn_exists[i] <- exists(alt_required_fns[i], mode = "function", inherits = FALSE, envir = alt_env)
+    }
+
+    missing_alt_fns <- alt_required_fns[!alt_fn_exists]
+    if (length(missing_alt_fns) > 0) {
+      stop(
+        "After sourcing alternative figures script, these functions are missing: ",
+        paste(missing_alt_fns, collapse = ", "),
+        "\nSourced scripts from: ",
+        alt_figures_path
+      )
+    }
+
+    p1_alt <- alt_env$plot_burden_responses_mean_ci_premium(df_long)
+    # The alternative script doesn't define plot_burden_heatmap_mean_median; use the primary figure as a stand-in.
+    p0_alt <- p1_alt
+    p2_alt <- alt_env$plot_burden_variation_spaghetti(df_long, df_summary)
+    p3_alt <- alt_env$plot_synnytitko_tarkasteltavan_lapsen_v2(df_clean)
+    p4_alt <- alt_env$plot_mita_lasta_tarkasteltavan_lapsen(df_clean)
+    p5_alt <- alt_env$plot_syntyiko_lapselle_sisarus_ennen_3v(df_clean)
+    p7_alt <- alt_env$plot_burden_responses_mean_ci_by_synnytitko(df_long)
+
+    p8_alt <- NULL
+    if (exists("plot_burden_scatter_by_synnytitko", mode = "function", inherits = FALSE, envir = alt_env)) {
+      p8_alt <- alt_env$plot_burden_scatter_by_synnytitko(df_long)
+    }
+
+    p9_alt <- NULL
+    if (exists("plot_burden_scatter_by_mita_lasta_and_synnytitko", mode = "function", inherits = FALSE, envir = alt_env)) {
+      p9_alt <- alt_env$plot_burden_scatter_by_mita_lasta_and_synnytitko(df_long)
+    }
+
+    save_plot_png(
+      p1_alt,
+      file.path(out_figures_dir_alt, "01_burden_trajectory_mean_alt.png"),
+      width = 9,
+      height = 6
+    )
+    save_plot_png(
+      p0_alt,
+      file.path(out_figures_dir_alt, "01_burden_heatmap_mean_median_alt.png"),
+      width = 6,
+      height = 9
+    )
+    save_plot_png(p2_alt, file.path(out_figures_dir_alt, "02_burden_variation_spaghetti_alt.png"), width = 12, height = 7)
+    save_plot_png(p7_alt, file.path(out_figures_dir_alt, "07_burden_by_synnyttiko_facet_alt.png"), width = 12, height = 6)
+
+    alt_env$save_taustaprofiili_plot(
+      df_clean,
+      path = file.path(out_figures_dir_alt, "00_taustaprofiili_yhdistetty_alt.png")
+    )
+
+    if (!is.null(p8_alt)) {
+      save_plot_png(p8_alt, file.path(out_figures_dir_alt, "08_burden_scatter_by_synnytitko_alt.png"), width = 12, height = 6)
+    }
+    if (!is.null(p9_alt)) {
+      save_plot_png(p9_alt, file.path(out_figures_dir_alt, "09_burden_scatter_by_mita_lasta_and_synnytitko_alt.png"), width = 12, height = 10)
+    }
+  } else {
+    message("Alternative figures script not found: ", alt_figures_path)
   }
 }
 

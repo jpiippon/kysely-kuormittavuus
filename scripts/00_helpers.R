@@ -104,10 +104,12 @@ make_age_interval_summary <- function(df_long) {
       mean = mean(burden, na.rm = TRUE),
       median = median(burden, na.rm = TRUE),
       sd = sd(burden, na.rm = TRUE),
+      q05 = quantile(burden, 0.05, na.rm = TRUE, names = FALSE, type = 7),
+      q95 = quantile(burden, 0.95, na.rm = TRUE, names = FALSE, type = 7),
       q25 = quantile(burden, 0.25, na.rm = TRUE, names = FALSE, type = 7),
       q75 = quantile(burden, 0.75, na.rm = TRUE, names = FALSE, type = 7),
       .groups = "drop"
     ) |>
     arrange(age_interval_order) |>
-    select(age_interval, n, mean, median, sd, q25, q75)
+    select(age_interval, n, mean, median, sd, q05, q95, q25, q75)
 }
