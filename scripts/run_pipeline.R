@@ -25,6 +25,7 @@ required_fns <- c(
   "plot_burden_responses_mean_ci_premium",
   "plot_burden_responses_mean_ci_by_synnytitko",
   "plot_burden_mean_by_mita_lasta",
+  "plot_burden_histogram_faceted",
   "save_taustaprofiili_plot"
 )
 
@@ -57,7 +58,7 @@ save_main_figures <- function(df_clean, df_long, out_figures_dir = file.path("ou
       plot = plot_burden_heatmap_mean_median(df_long),
       path = file.path(out_figures_dir, "l\u00E4mp\u00F6kartta.png"),
       width = 6,
-      height = 9
+      height = 10
     ),
     list(
       plot = plot_burden_responses_mean_ci_by_synnytitko(df_long),
@@ -70,6 +71,12 @@ save_main_figures <- function(df_clean, df_long, out_figures_dir = file.path("ou
       path = file.path(out_figures_dir, "ensimm\u00E4inen_vs_monesko.png"),
       width = 12,
       height = 6
+    ),
+    list(
+      plot = plot_burden_histogram_faceted(df_long),
+      path = file.path(out_figures_dir, "histogrammi.png"),
+      width = 12,
+      height = 8
     )
   )
 
@@ -79,7 +86,7 @@ save_main_figures <- function(df_clean, df_long, out_figures_dir = file.path("ou
 
   save_taustaprofiili_plot(
     df_clean,
-    path = file.path(out_figures_dir, "taustaprofiili_yhdistetty.png")
+    path = file.path(out_figures_dir, "taustakysymykset.png")
   )
 
   invisible(out_figures_dir)

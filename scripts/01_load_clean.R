@@ -11,69 +11,51 @@ load_and_clean_survey <- function(
     locale = readr::locale(encoding = "UTF-8")
   )
 
-  # Trim whitespace from imported raw column names before any matching.
-  names(df_raw) <- str_trim(names(df_raw))
+  names(df_raw) <- stringr::str_trim(names(df_raw))
   cols <- names(df_raw)
 
-  # Expected Finnish raw column names (from your prompt).
-  expected_raw <- list(
-    timestamp = "Timestamp",
-    synnytitko_lapsi = "Synnytitkö tarkasteltavan lapsen/lapset?",
-    mita_lasta = "Mitä lasta tämä vastaus koskee?",
-    sisarukset_ennen_3v = "Syntyikö arvioimillesi lapsille(lapselle) sisaruksia(sisarus) ennen 3v ikää? Tämä voi sekoittaa pakkaa..",
-    kuormitus_0_3vko = "Syntymästä 3 viikon ikään",
-    kuormitus_3vko_3kk = "3 viikon iästä 3 kuukauden ikään",
-    kuormitus_3_6kk = "3–6 kk",
-    kuormitus_6_12kk = "6–12 kk",
-    kuormitus_12_18kk = "1–1,5 vuotta (12-18kk)",
-    kuormitus_18_24kk = "1,5–2 vuotta (18-24kk)",
-    kuormitus_24_30kk = "2–2,5 vuotta (24-30kk)",
-    kuormitus_30_36kk = "2,5–3 vuotta (30kk-36kk)"
-  )
+  normalize_key <- function(x) {
+    x_ascii <- iconv(x, from = "", to = "ASCII//TRANSLIT", sub = "")
+    x_low <- tolower(x_ascii)
+    gsub("[^a-z0-9]+", "", x_low)
+  }
 
-  present_all <- function(x) all(purrr::map_lgl(x, ~ .x %in% cols))
-  found_exact <- present_all(expected_raw)
+  key_map <- stats::setNames(cols, normalize_key(cols))
 
-  if (!found_exact) {
-    missing <- names(expected_raw)[!purrr::map_lgl(expected_raw, ~ .x %in% cols)]
-    message("Column matching did not find all expected Finnish raw column names.")
-    message("Missing expected raw columns: ", paste(missing, collapse = ", "))
-    message("Raw column names actually present (after UTF-8 import + trim):")
-    message(paste(cols, collapse = " | "))
+  pick_col <- function(patterns, fallback_index = NULL, required = TRUE) {
+    hits <- unique(unlist(lapply(patterns, function(p) grep(p, names(key_map), value = TRUE))))
 
-    # Fallback positional mapping (known questionnaire order):
-    # 1 Timestamp, 2 synnytitkö, 3 mitä lasta koskee, 4-11 burden (8 cols), 12 sisarukset.
-    if (length(cols) < 12) {
-      stop("Fallback positional mapping failed: fewer than 12 columns detected.")
+    if (length(hits) >= 1) {
+      return(unname(key_map[[hits[[1]]]]))
     }
 
-    timestamp_col <- cols[1]
-    birth_col <- cols[2]
-    response_about_col <- cols[3]
-    siblings_col <- cols[length(cols)]
-    burden_cols_in_order <- cols[4:11]
-  } else {
-    timestamp_col <- expected_raw$timestamp
-    birth_col <- expected_raw$synnytitko_lapsi
-    response_about_col <- expected_raw$mita_lasta
-    siblings_col <- expected_raw$sisarukset_ennen_3v
-    burden_cols_in_order <- c(
-      expected_raw$kuormitus_0_3vko,
-      expected_raw$kuormitus_3vko_3kk,
-      expected_raw$kuormitus_3_6kk,
-      expected_raw$kuormitus_6_12kk,
-      expected_raw$kuormitus_12_18kk,
-      expected_raw$kuormitus_18_24kk,
-      expected_raw$kuormitus_24_30kk,
-      expected_raw$kuormitus_30_36kk
-    )
+    if (!is.null(fallback_index) && fallback_index <= length(cols)) {
+      return(cols[[fallback_index]])
+    }
+
+    if (required) {
+      stop("Could not map a required raw column. Patterns: ", paste(patterns, collapse = " | "))
+    }
+
+    NA_character_
   }
+
+  timestamp_col <- pick_col(c("^timestamp$", "aikaleima"), fallback_index = 1)
+  birth_col <- pick_col(c("synnytitko", "synnytitko.*tarkasteltavan"), fallback_index = 2)
+  response_about_col <- pick_col(c("mitalasta", "vastauskoskee"), fallback_index = 3)
+  siblings_col <- pick_col(c("sisaruksia", "sisarus", "ennen3v"), fallback_index = length(cols))
+
+  if (length(cols) < 12) {
+    stop("Expected at least 12 columns in raw data, found: ", length(cols))
+  }
+
+  burden_cols_in_order <- cols[4:11]
 
   normalize_yesno <- function(x) {
     x_chr <- as.character(x)
     dplyr::case_when(
-      str_detect(x_chr, regex("^Kyll", ignore_case = TRUE)) ~ "Kyllä",
-      str_detect(x_chr, regex("^(Ei|En)$", ignore_case = TRUE)) ~ "Ei",
+      stringr::str_detect(x_chr, stringr::regex("^Kyll", ignore_case = TRUE)) ~ "Kyllä",
+      stringr::str_detect(x_chr, stringr::regex("^(Ei|En)$", ignore_case = TRUE)) ~ "Ei",
       TRUE ~ x_chr
     )
   }
@@ -81,34 +63,31 @@ load_and_clean_survey <- function(
   normalize_mita_lasta <- function(x) {
     x_chr <- as.character(x)
     dplyr::case_when(
-      str_detect(x_chr, regex("Ensimm", ignore_case = TRUE)) ~ "Ensimmäistä lastani",
-      str_detect(x_chr, regex("Toista", ignore_case = TRUE)) ~ "Toista tai myöhempää lastani",
-      str_detect(x_chr, regex("Lapsiani", ignore_case = TRUE)) ~ "Lapsiani yleisesti",
+      stringr::str_detect(x_chr, stringr::regex("Ensimm", ignore_case = TRUE)) ~ "Ensimmäistä lastani",
+      stringr::str_detect(x_chr, stringr::regex("Toista", ignore_case = TRUE)) ~ "Toista tai myöhempää lastani",
+      stringr::str_detect(x_chr, stringr::regex("Lapsiani", ignore_case = TRUE)) ~ "Lapsiani yleisesti",
       TRUE ~ x_chr
     )
   }
 
   df_raw |>
-    rename(
-      timestamp = all_of(timestamp_col),
-      synnytitko_lapsi = all_of(birth_col),
-      mita_lasta = all_of(response_about_col),
-      sisarukset_ennen_3v = all_of(siblings_col),
-      kuormitus_0_3vko = all_of(burden_cols_in_order[[1]]),
-      kuormitus_3vko_3kk = all_of(burden_cols_in_order[[2]]),
-      kuormitus_3_6kk = all_of(burden_cols_in_order[[3]]),
-      kuormitus_6_12kk = all_of(burden_cols_in_order[[4]]),
-      kuormitus_12_18kk = all_of(burden_cols_in_order[[5]]),
-      kuormitus_18_24kk = all_of(burden_cols_in_order[[6]]),
-      kuormitus_24_30kk = all_of(burden_cols_in_order[[7]]),
-      kuormitus_30_36kk = all_of(burden_cols_in_order[[8]])
+    dplyr::rename(
+      timestamp = dplyr::all_of(timestamp_col),
+      synnytitko_lapsi = dplyr::all_of(birth_col),
+      mita_lasta = dplyr::all_of(response_about_col),
+      sisarukset_ennen_3v = dplyr::all_of(siblings_col),
+      kuormitus_0_3vko = dplyr::all_of(burden_cols_in_order[[1]]),
+      kuormitus_3vko_3kk = dplyr::all_of(burden_cols_in_order[[2]]),
+      kuormitus_3_6kk = dplyr::all_of(burden_cols_in_order[[3]]),
+      kuormitus_6_12kk = dplyr::all_of(burden_cols_in_order[[4]]),
+      kuormitus_12_18kk = dplyr::all_of(burden_cols_in_order[[5]]),
+      kuormitus_18_24kk = dplyr::all_of(burden_cols_in_order[[6]]),
+      kuormitus_24_30kk = dplyr::all_of(burden_cols_in_order[[7]]),
+      kuormitus_30_36kk = dplyr::all_of(burden_cols_in_order[[8]])
     ) |>
-    mutate(
-      timestamp = as.POSIXct(timestamp),
-      across(
-        starts_with("kuormitus_"),
-        ~ suppressWarnings(as.numeric(.x))
-      ),
+    dplyr::mutate(
+      timestamp = suppressWarnings(as.POSIXct(timestamp)),
+      dplyr::across(dplyr::starts_with("kuormitus_"), ~ suppressWarnings(as.numeric(.x))),
       synnytitko_lapsi = normalize_yesno(synnytitko_lapsi),
       sisarukset_ennen_3v = normalize_yesno(sisarukset_ennen_3v),
       mita_lasta = normalize_mita_lasta(mita_lasta)
