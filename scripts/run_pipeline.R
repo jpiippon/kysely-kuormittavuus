@@ -57,7 +57,7 @@ save_main_figures <- function(df_clean, df_long, out_figures_dir = file.path("ou
     list(
       plot = plot_burden_heatmap_mean_median(df_long),
       path = file.path(out_figures_dir, "l\u00E4mp\u00F6kartta.png"),
-      width = 6,
+      width = 7,
       height = 10
     ),
     list(

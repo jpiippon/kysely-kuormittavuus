@@ -90,17 +90,17 @@ plot_burden_heatmap_mean_median <- function(df_long) {
     ggplot2::scale_x_continuous(
       breaks = seq_along(age_labels_ordered),
       labels = age_labels_ordered,
-      guide = ggplot2::guide_axis(n.dodge = 2)
+      guide = ggplot2::guide_axis(angle = 45)
     ) +
     ggplot2::scale_y_continuous(limits = c(0, 10.8), breaks = seq(0, 10, by = 2)) +
     ggplot2::scale_fill_gradientn(
-      colours = c("#6BB5F2", "#3F90D6", "#1F79D1", "#0E5FAF", "#083B6B"),
+      colours = c("#EAF2FB", "#D7E8F8", "#BCD8F1", "#8FBCE3", "#5F96C8", "#2E659D"),
       limits = c(0, 0.30), breaks = c(0, 0.10, 0.20, 0.30), labels = c("0 %", "10 %", "20 %", "30 %"),
       oob = scales::squish, name = "Osuus"
     ) +
     ggplot2::labs(
-      title = "Kuormituskokemus vaihtelee i\u00E4n my\u00F6t\u00E4",
-      subtitle = "Tummempi ruutu = suurempi osuus vastauksista kyseisell\u00E4 kuormitusarvolla. Oranssi viiva = keskiarvo, katkoviiva = mediaani.",
+      title = "Sama ikävaihe voi tuntua\näärimmäisen raskaalta tai melko kevyeltä",
+      subtitle = "Tummempi ruutu = suurempi osuus vastannut kyseisen kuormitustason",
       x = "Ik\u00E4v\u00E4li",
       y = "Kuormitus (0\u201310)"
     ) +
@@ -125,18 +125,9 @@ plot_burden_responses_mean_ci_by_synnytitko <- function(df_long) {
     dplyr::group_by(ryhma, age_interval_order) |>
     dplyr::summarise(mean = mean(burden), .groups = "drop")
 
-  df_labels <- df_stats |>
-    dplyr::mutate(label = chartr(".", ",", sprintf("%.1f", mean)))
-
   ggplot2::ggplot(df_stats, ggplot2::aes(x = age_interval_order, color = ryhma, fill = ryhma)) +
     ggplot2::geom_line(ggplot2::aes(y = mean), linewidth = 2.0) +
     ggplot2::geom_point(ggplot2::aes(y = mean), shape = 21, size = 3.4, fill = col_bg, stroke = 1.4) +
-    ggplot2::geom_text(
-      data = df_labels,
-      ggplot2::aes(y = pmin(mean + 0.28, 9.6), label = label),
-      size = 3.0,
-      show.legend = FALSE
-    ) +
     ggplot2::scale_color_manual(values = stats::setNames(c(col_accent, col_neutral), labels)) +
     ggplot2::scale_fill_manual(values = stats::setNames(c(col_accent_soft, col_neutral_soft), labels)) +
     ggplot2::scale_x_continuous(breaks = seq_along(age_labels_ordered), labels = age_labels_ordered) +
@@ -169,20 +160,11 @@ plot_burden_mean_by_mita_lasta <- function(df_long) {
     dplyr::group_by(ryhma, age_interval_order) |>
     dplyr::summarise(mean = mean(burden), .groups = "drop")
 
-  df_labels <- df_stats |>
-    dplyr::mutate(label = chartr(".", ",", sprintf("%.1f", mean)))
-
   pal <- stats::setNames(c(col_accent, col_neutral, col_dim), labels)
 
   ggplot2::ggplot(df_stats, ggplot2::aes(x = age_interval_order, y = mean, color = ryhma, group = ryhma)) +
     ggplot2::geom_line(linewidth = 2.0) +
     ggplot2::geom_point(shape = 21, size = 3.4, fill = col_bg, stroke = 1.4) +
-    ggplot2::geom_text(
-      data = df_labels,
-      ggplot2::aes(y = pmin(mean + 0.28, 9.6), label = label),
-      size = 2.9,
-      show.legend = FALSE
-    ) +
     ggplot2::scale_color_manual(values = pal) +
     ggplot2::scale_x_continuous(breaks = seq_along(age_labels_ordered), labels = age_labels_ordered) +
     ggplot2::scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, by = 2)) +
@@ -201,7 +183,7 @@ plot_burden_histogram_faceted <- function(df_long) {
     dplyr::mutate(age_interval = factor(age_interval, levels = age_labels_ordered))
 
   ggplot2::ggplot(df_plot, ggplot2::aes(x = burden)) +
-    ggplot2::geom_histogram(binwidth = 1, boundary = -0.5, fill = col_neutral, color = "white", alpha = 0.95) +
+    ggplot2::geom_histogram(binwidth = 1, boundary = -0.5, fill = "#8FBCE3", color = "#2E659D", alpha = 0.95) +
     ggplot2::facet_wrap(~ age_interval, ncol = 4) +
     ggplot2::scale_x_continuous(breaks = 0:10, limits = c(0, 10)) +
     ggplot2::labs(
