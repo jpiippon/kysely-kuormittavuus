@@ -37,6 +37,15 @@ plot_burden_responses_mean_ci_premium <- function(df_long) {
   n_by_age <- df_stats |> arrange(age_interval_order) |> pull(n)
   age_labels_with_n <- sprintf("%s\n(n = %d)", age_labels_ordered, n_by_age)
 
+  # x-akselin tick-teksteihin halutaan eri fonttikoot:
+  # - yläosa: ikäväli (isompi)
+  # - alaosa: n-määrä sulkeissa (pienempi)
+  axis_label_df <- tibble(
+    x = seq_along(age_labels_ordered),
+    age = age_labels_ordered,
+    n = n_by_age
+  )
+
   ggplot(df_stats, aes(x = age_interval_order)) +
     # 90 % vaihteluväli
     geom_ribbon(aes(ymin = q05, ymax = q95), fill = col_accent_soft, alpha = 0.55) +
@@ -61,22 +70,51 @@ plot_burden_responses_mean_ci_premium <- function(df_long) {
     annotate(
       "text",
       x = peak$age_interval_order, y = 9.6,
-      label = sprintf("Kuormitushuippu\n(Keskiarvo %.1f)", peak$mean),
+      label = "Kuormitushuippu",
       hjust = 0.5, vjust = 0, size = 3.8, color = col_ink, fontface = "bold", lineheight = 1.1
     ) +
-    scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, by = 2), expand = expansion(mult = c(0.02, 0.05))) +
-    scale_x_continuous(breaks = seq_along(age_labels_ordered), labels = age_labels_with_n) +
+    scale_y_continuous(
+      limits = c(-1, 10),
+      breaks = seq(0, 10, by = 2),
+      expand = expansion(mult = c(0.02, 0.05))
+    ) +
+    scale_x_continuous(breaks = seq_along(age_labels_ordered), labels = NULL) +
     labs(
       title = "Kuormitus huipentuu vauvan ollessa 3\u20136 kuukautta",
       subtitle = "Keskiarvo (viiva) ja vaihteluväli, johon 90 % vastauksista sijoittuu (punertava varjostus)",
       x = "Lapsen ikä", y = "Kuormitus (0\u201310)",
       caption = 'Vastaa tutkimuskysymykseen: "Kuinka kuormittavaksi koit arjen kussakin vaiheessa?", johon vastattiin asteikolla 0–10.'
     ) +
-    theme_linkedin()
+    theme_linkedin() +
+    theme(
+      # x-akselin "n = XX" -tunnisteet hieman pienempänä, jotta päähuomio pysyy huipussa
+      axis.text.x = element_blank()
+    ) +
+    coord_cartesian(clip = "off") +
+    # Ikäväli (isompi)
+    geom_text(
+      data = axis_label_df,
+      aes(x = x, y = -0.30, label = age),
+      inherit.aes = FALSE,
+      size = 3.7,
+      color = col_text,
+      vjust = 1
+    ) +
+    # (n = XX) (pienempi)
+    geom_text(
+      data = axis_label_df,
+      aes(x = x, y = -0.74, label = sprintf("(n = %d)", n)),
+      inherit.aes = FALSE,
+      size = 3.0,
+      color = col_text,
+      vjust = 1
+    )
 }
 
 # 2. Pääkuva: kontrolloitu vaakalevitys + mean (primary) + median (dashed)
 plot_burden_heatmap_mean_median <- function(df_long) {
+  return(plot_burden_heatmap_mean_median_share(df_long))
+
   age_labels_ordered <- c(
     "0\u20133 vko", "3 vko\u20133 kk", "3\u20136 kk", "6\u201312 kk",
     "12\u201318 kk", "18\u201324 kk", "24\u201330 kk", "30\u201336 kk"
@@ -165,6 +203,140 @@ plot_burden_heatmap_mean_median <- function(df_long) {
     ) +
     theme_linkedin() +
     theme(legend.position = "none")
+}
+
+plot_burden_heatmap_mean_median_share <- function(df_long) {
+  age_labels_ordered <- c(
+    "0\u20133 vko", "3 vko\u20133 kk", "3\u20136 kk", "6\u201312 kk",
+    "12\u201318 kk", "18\u201324 kk", "24\u201330 kk", "30\u201336 kk"
+  )
+
+  df_plot <- df_long |>
+    filter(!is.na(burden), burden >= 0, burden <= 10) |>
+    mutate(
+      burden_score = pmin(pmax(round(burden), 0), 10)
+    )
+
+  df_n <- df_plot |>
+    group_by(age_interval_order) |>
+    summarise(n = sum(!is.na(burden)), .groups = "drop")
+
+  df_stats <- df_plot |>
+    group_by(age_interval_order) |>
+    summarise(
+      mean = mean(burden),
+      median = median(burden),
+      .groups = "drop"
+    )
+
+  df_dist <- df_plot |>
+    count(age_interval_order, burden_score, name = "count") |>
+    right_join(
+      tidyr::expand_grid(
+        age_interval_order = seq_along(age_labels_ordered),
+        burden_score = 0:10
+      ),
+      by = c("age_interval_order", "burden_score")
+    ) |>
+    left_join(df_n, by = "age_interval_order") |>
+    mutate(
+      count = dplyr::coalesce(count, 0L),
+      n = dplyr::coalesce(n, 0L),
+      share = if_else(n > 0, count / n, 0)
+    )
+
+  n_y <- 10.55
+
+  ggplot(df_dist, aes(x = age_interval_order, y = burden_score, fill = share)) +
+    geom_tile(color = "white", linewidth = 0.45, width = 0.95, height = 0.95) +
+    # Mean (orange)
+    geom_line(
+      data = df_stats,
+      aes(x = age_interval_order, y = mean),
+      color = col_accent,
+      linewidth = 2.6,
+      inherit.aes = FALSE
+    ) +
+    geom_point(
+      data = df_stats,
+      aes(x = age_interval_order, y = mean),
+      shape = 21,
+      size = 3.6,
+      fill = col_bg,
+      color = col_accent,
+      stroke = 1.4,
+      inherit.aes = FALSE
+    ) +
+    # Median (dark dashed)
+    geom_line(
+      data = df_stats,
+      aes(x = age_interval_order, y = median),
+      color = col_neutral,
+      linewidth = 2.1,
+      linetype = "dashed",
+      inherit.aes = FALSE
+    ) +
+    geom_point(
+      data = df_stats,
+      aes(x = age_interval_order, y = median),
+      shape = 21,
+      size = 3.0,
+      fill = col_bg,
+      color = col_neutral,
+      stroke = 1.1,
+      alpha = 0.95,
+      inherit.aes = FALSE
+    ) +
+    geom_text(
+      data = df_n,
+      aes(x = age_interval_order, y = n_y, label = sprintf("n = %d", n)),
+      inherit.aes = FALSE,
+      size = 3.2,
+      color = col_text,
+      vjust = 0
+    ) +
+    scale_x_continuous(
+      breaks = seq_along(age_labels_ordered),
+      labels = age_labels_ordered,
+      limits = c(0.6, length(age_labels_ordered) + 0.4),
+      expand = expansion(mult = c(0, 0))
+    ) +
+    scale_y_continuous(
+      limits = c(0, 10.8),
+      breaks = seq(0, 10, by = 2),
+      expand = expansion(mult = c(0, 0))
+    ) +
+    scale_fill_gradientn(
+      colours = c(
+        # Blue-only palette (higher saturation, avoid greyish mids)
+        "#6BB5F2", # low (0 %)
+        "#3F90D6", # mid-low (~10 %)
+        "#1F79D1", # mid (~20 %)
+        "#0E5FAF", # mid-high (~22 %)
+        "#083B6B"  # high (~30 %)
+      ),
+      # Painotetaan värikontrastia erityisesti 20 % -> 30 % -alueelle
+      values = c(0.00, 0.25, 0.55, 0.75, 1.00),
+      limits = c(0, 0.30),
+      breaks = c(0, 0.10, 0.20, 0.30),
+      labels = c("0 %", "10 %", "20 %", "30 %"),
+      oob = scales::squish,
+      na.value = "#6BB5F2",
+      name = "Osuus"
+    ) +
+    labs(
+      title = "Sama ikävaihe voi tuntua hyvin raskaalta tai melko kevyeltä",
+      subtitle = "Tummempi ruutu = suurempi osuus vastauksista kyseisellä kuormitusarvolla.\nOranssi viiva = keskiarvo, katkoviiva = mediaani.",
+      x = "Ikäjakso",
+      y = "Kuormitus (0–10)",
+      caption = 'Kuormitusasteikko 0\u201310.'
+    ) +
+    theme_linkedin() +
+    theme(
+      legend.position = "top",
+      panel.grid.major.y = element_line(color = "#D8EAFB", linewidth = 0.4)
+    ) +
+    coord_cartesian(clip = "off")
 }
 
 # 3. SIVUKUVA 2: Synnyttänyt vs. ei-synnyttänyt (mean + median)

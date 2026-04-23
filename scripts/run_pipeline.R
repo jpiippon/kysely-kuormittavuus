@@ -106,7 +106,7 @@ main <- function() {
     width = 9,
     height = 6
   )
-  save_plot_png(p0, file.path(out_figures_dir, "01_burden_heatmap_mean_median.png"), width = 6, height = 9)
+  save_plot_png(p0, file.path(out_figures_dir, "02 lämpökartta.png"), width = 6, height = 9)
   save_plot_png(p2, file.path(out_figures_dir, "02_burden_variation_spaghetti.png"), width = 12, height = 7)
   save_plot_png(p6, file.path(out_figures_dir, "06_burden_mean_by_mita_lasta.png"), width = 12, height = 6)
   save_plot_png(p7, file.path(out_figures_dir, "07_burden_by_synnyttiko_facet.png"), width = 12, height = 6)
