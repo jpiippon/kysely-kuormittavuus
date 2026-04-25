@@ -99,7 +99,7 @@ plot_burden_heatmap_mean_median <- function(df_long) {
       oob = scales::squish, name = "Osuus"
     ) +
     ggplot2::labs(
-      title = "Sama ikävaihe voi tuntua\näärimmäisen raskaalta tai melko kevyeltä",
+      title = "Sama ikävaihe voi tuntua vastaajasta riippuen\näärimmäisen raskaalta tai melko kevyeltä",
       subtitle = "Tummempi ruutu = suurempi osuus vastannut kyseisen kuormitustason",
       x = "Ik\u00E4v\u00E4li",
       y = "Kuormitus (0\u201310)"
@@ -133,7 +133,7 @@ plot_burden_responses_mean_ci_by_synnytitko <- function(df_long) {
     ggplot2::scale_x_continuous(breaks = seq_along(age_labels_ordered), labels = age_labels_ordered) +
     ggplot2::scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, by = 2)) +
     ggplot2::labs(
-      title = "Synnytt\u00E4neiden lis\u00E4kuorma tuntuu eniten alkuvaiheessa",
+      title = "Vanhempien kokemat erot alkuvaiheen kuormituksesta saattavat yllättää",
       subtitle = "Keskiarvoviivat (0\u201310) ryhmitt\u00E4in.",
       x = "Lapsen ik\u00E4",
       y = "Kuormitus (0\u201310)",
@@ -161,19 +161,24 @@ plot_burden_mean_by_mita_lasta <- function(df_long) {
     dplyr::summarise(mean = mean(burden), .groups = "drop")
 
   pal <- stats::setNames(c(col_accent, col_neutral, col_dim), labels)
+  df_general <- dplyr::filter(df_stats, ryhma == labels[3])
+  df_specific <- dplyr::filter(df_stats, ryhma != labels[3])
 
   ggplot2::ggplot(df_stats, ggplot2::aes(x = age_interval_order, y = mean, color = ryhma, group = ryhma)) +
-    ggplot2::geom_line(linewidth = 2.0) +
+    ggplot2::geom_line(data = df_specific, linewidth = 2.0) +
+    ggplot2::geom_line(data = df_general, linewidth = 1.2, linetype = "dashed") +
     ggplot2::geom_point(shape = 21, size = 3.4, fill = col_bg, stroke = 1.4) +
-    ggplot2::scale_color_manual(values = pal) +
+    ggplot2::scale_color_manual(values = pal, breaks = labels, limits = labels, name = "Lapsen järjestys") +
     ggplot2::scale_x_continuous(breaks = seq_along(age_labels_ordered), labels = age_labels_ordered) +
     ggplot2::scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, by = 2)) +
     ggplot2::labs(
-      title = "Kuormituksen taso riippuu lapsij\u00E4rjestyksest\u00E4",
+      title = "Ensimmäinen kierros tuntuu kuormittavimmalta",
       subtitle = "Keskiarvoviivat (0\u201310) sen mukaan, mit\u00E4 lasta vastaus koskee.",
       x = "Lapsen ik\u00E4",
-      y = "Kuormitus (0\u201310)"
+      y = "Kuormitus (0\u201310)",
+      caption = "Ryhmittely perustuu kysymykseen: Mitä lasta tämä vastaus koskee?"
     ) +
+    ggplot2::guides(color = ggplot2::guide_legend(order = 1)) +
     theme_linkedin()
 }
 
