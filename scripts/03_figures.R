@@ -233,8 +233,13 @@ plot_suurin_vs_pienin_pistemaara <- function(df_long) {
   selected_ids <- dplyr::bind_rows(top3, bottom3) |>
     dplyr::mutate(
       viivalabel = dplyr::case_when(
-        ryhma == "Suurin summa" ~ paste0("Suurin ", sijoitus, " · ", lapsijarjestys),
-        TRUE ~ paste0("Pienin ", sijoitus, " · ", lapsijarjestys)
+        ryhma == "Suurin summa" & lapsijarjestys == "Ensimmäinen lapsi" ~ paste0(sijoitus, ". suurin, eka lapsi"),
+        ryhma == "Suurin summa" & lapsijarjestys == "Toinen tai myöhempi lapsi" ~ paste0(sijoitus, ". suurin, toinen+"),
+        ryhma == "Suurin summa" & lapsijarjestys == "Lapset yleisesti" ~ paste0(sijoitus, ". suurin, yleisesti"),
+        ryhma == "Pienin summa" & lapsijarjestys == "Ensimmäinen lapsi" ~ paste0(sijoitus, ". pienin, eka lapsi"),
+        ryhma == "Pienin summa" & lapsijarjestys == "Toinen tai myöhempi lapsi" ~ paste0(sijoitus, ". pienin, toinen+"),
+        ryhma == "Pienin summa" & lapsijarjestys == "Lapset yleisesti" ~ paste0(sijoitus, ". pienin, yleisesti"),
+        TRUE ~ paste0(sijoitus, ". ", ifelse(ryhma == "Suurin summa", "suurin", "pienin"), ", ", lapsijarjestys)
       ),
       vanhempi = factor(vanhempi, levels = c("Äiti", "Isä", "Tieto puuttuu")),
       lapsijarjestys = factor(
@@ -262,7 +267,7 @@ plot_suurin_vs_pienin_pistemaara <- function(df_long) {
     ) |>
     dplyr::group_by(ryhma) |>
     dplyr::arrange(burden, .by_group = TRUE) |>
-    dplyr::mutate(label_y = pmin(pmax(burden + c(-0.35, 0, 0.35), 0.25), 9.75)) |>
+    dplyr::mutate(label_y = pmin(pmax(burden + c(-0.45, 0, 0.45), 0.25), 9.75)) |>
     dplyr::ungroup()
 
   ggplot2::ggplot(
@@ -271,17 +276,18 @@ plot_suurin_vs_pienin_pistemaara <- function(df_long) {
       x = age_interval_order,
       y = burden,
       group = respondent_id,
-      color = vanhempi
+      color = vanhempi,
+      linetype = ryhma
     )
   ) +
     ggplot2::geom_line(linewidth = 1.2, alpha = 0.95) +
-    ggplot2::geom_point(ggplot2::aes(shape = ryhma), size = 2.6, stroke = 1, fill = col_bg) +
+    ggplot2::geom_point(size = 2.1, alpha = 0.85) +
     ggplot2::geom_text(
       data = label_df,
-      ggplot2::aes(x = 8.55, y = label_y, label = viivalabel),
+      ggplot2::aes(x = 8.8, y = label_y, label = viivalabel),
       inherit.aes = FALSE,
       hjust = 0,
-      size = 3.2,
+      size = 3.0,
       color = col_ink
     ) +
     ggplot2::scale_color_manual(
@@ -294,20 +300,20 @@ plot_suurin_vs_pienin_pistemaara <- function(df_long) {
       limits = c("Äiti", "Isä", "Tieto puuttuu"),
       name = "Vanhempi"
     ) +
-    ggplot2::scale_shape_manual(
+    ggplot2::scale_linetype_manual(
       values = c(
-        "Pienin summa" = 1,
-        "Suurin summa" = 16
+        "Suurin summa" = "solid",
+        "Pienin summa" = "dotted"
       ),
       breaks = c("Suurin summa", "Pienin summa"),
       limits = c("Pienin summa", "Suurin summa"),
-      name = "Summa"
+      name = "Pistemääräryhmä"
     ) +
     ggplot2::scale_x_continuous(
       breaks = seq_along(age_labels_ordered),
       labels = age_labels_ordered,
-      limits = c(1, 9.6),
-      expand = ggplot2::expansion(mult = c(0.01, 0.02))
+      limits = c(1, 9.35),
+      expand = ggplot2::expansion(mult = c(0.01, 0.12))
     ) +
     ggplot2::scale_y_continuous(
       limits = c(0, 10),
@@ -315,15 +321,16 @@ plot_suurin_vs_pienin_pistemaara <- function(df_long) {
       expand = ggplot2::expansion(mult = c(0.02, 0.05))
     ) +
     ggplot2::labs(
-      title = "Suurin vs. pienin pistemäärä",
-      subtitle = "Mukana kolme vastaajaa, joiden kuormitusvastausten summa oli suurin, ja kolme vastaajaa, joiden summa oli pienin.",
+      title = "Kuormitus jakautuu jyrkästi: kolme raskaimmaksi ja kolme kevyimmäksi kokenutta vastaajaa",
+      subtitle = "Väri = äiti/isä, viivatyyppi = suurin vs. pienin kokonaispistemäärä.",
       x = "Lapsen ikä",
       y = "Kuormitus (0\u201310)",
       caption = "Mukana vain vastaajat, joilla oli kuormitusvastaus kaikista 8 ikävaiheesta."
     ) +
     theme_linkedin() +
     ggplot2::theme(
-      legend.position = "bottom"
+      legend.position = "bottom",
+      plot.margin = ggplot2::margin(20, 40, 16, 20)
     ) +
     ggplot2::coord_cartesian(clip = "off")
 }
