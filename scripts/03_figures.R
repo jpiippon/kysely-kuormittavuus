@@ -100,7 +100,7 @@ plot_burden_heatmap_mean_median <- function(df_long) {
     ) +
     ggplot2::labs(
       title = "Sama ikävaihe voi tuntua vastaajasta riippuen\näärimmäisen raskaalta tai melko kevyeltä",
-      subtitle = "Tummempi ruutu = suurempi osuus vastannut kyseisen kuormitustason",
+      subtitle = "Tummempi ruutu = suurempi osuus vastannut kyseisen kuormitustason\nOranssi viiva = keskiarvo, katkoviiva = mediaani.",
       x = "Ik\u00E4v\u00E4li",
       y = "Kuormitus (0\u201310)"
     ) +
@@ -172,7 +172,7 @@ plot_burden_mean_by_mita_lasta <- function(df_long) {
     ggplot2::scale_x_continuous(breaks = seq_along(age_labels_ordered), labels = age_labels_ordered) +
     ggplot2::scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, by = 2)) +
     ggplot2::labs(
-      title = "Ensimmäinen kierros tuntuu kuormittavimmalta",
+      title = "Eka kierros tuntuu alkuvaiheessa kuormittavimmalta,\nuseamman lapsen arki näkyy myöhemmin?",
       subtitle = "Keskiarvoviivat (0\u201310) sen mukaan, mit\u00E4 lasta vastaus koskee.",
       x = "Lapsen ik\u00E4",
       y = "Kuormitus (0\u201310)",
@@ -180,6 +180,158 @@ plot_burden_mean_by_mita_lasta <- function(df_long) {
     ) +
     ggplot2::guides(color = ggplot2::guide_legend(order = 1)) +
     theme_linkedin()
+}
+
+plot_suurin_vs_pienin_pistemaara <- function(df_long) {
+  age_labels_ordered <- c(
+    "0\u20133 vko", "3 vko\u20133 kk", "3\u20136 kk", "6\u201312 kk",
+    "12\u201318 kk", "18\u201324 kk", "24\u201330 kk", "30\u201336 kk"
+  )
+
+  n_periods <- length(age_labels_ordered)
+
+  respondent_summary <- df_long |>
+    dplyr::filter(!is.na(burden)) |>
+    dplyr::mutate(
+      vanhempi = dplyr::case_when(
+        stringr::str_detect(as.character(synnytitko_lapsi), stringr::regex("^Kyll", ignore_case = TRUE)) ~ "Äiti",
+        stringr::str_detect(as.character(synnytitko_lapsi), stringr::regex("^(Ei|En)$", ignore_case = TRUE)) ~ "Isä",
+        TRUE ~ "Tieto puuttuu"
+      ),
+      lapsijarjestys = dplyr::case_when(
+        stringr::str_detect(as.character(mita_lasta), stringr::regex("^Ensimm", ignore_case = TRUE)) ~ "Ensimmäinen lapsi",
+        stringr::str_detect(as.character(mita_lasta), stringr::regex("^Toista", ignore_case = TRUE)) ~ "Toinen tai myöhempi lapsi",
+        stringr::str_detect(as.character(mita_lasta), stringr::regex("Lapsiani", ignore_case = TRUE)) ~ "Lapset yleisesti",
+        TRUE ~ "Tieto puuttuu"
+      )
+    ) |>
+    dplyr::group_by(respondent_id) |>
+    dplyr::summarise(
+      total_score = sum(burden),
+      n_answers = dplyr::n(),
+      vanhempi = dplyr::first(vanhempi[vanhempi != "Tieto puuttuu"], default = "Tieto puuttuu"),
+      lapsijarjestys = dplyr::first(lapsijarjestys[lapsijarjestys != "Tieto puuttuu"], default = "Tieto puuttuu"),
+      .groups = "drop"
+    ) |>
+    dplyr::filter(n_answers == n_periods)
+
+  if (nrow(respondent_summary) < 6) {
+    stop("Tarvitaan vähintään 6 vastaajaa, joilla on kuormitusvastaus kaikista 8 ikävaiheesta.")
+  }
+
+  top3 <- respondent_summary |>
+    dplyr::arrange(dplyr::desc(total_score), respondent_id) |>
+    dplyr::slice_head(n = 3) |>
+    dplyr::mutate(ryhma = "Suurin summa", sijoitus = dplyr::row_number())
+
+  bottom3 <- respondent_summary |>
+    dplyr::anti_join(top3, by = "respondent_id") |>
+    dplyr::arrange(total_score, respondent_id) |>
+    dplyr::slice_head(n = 3) |>
+    dplyr::mutate(ryhma = "Pienin summa", sijoitus = dplyr::row_number())
+
+  selected_ids <- dplyr::bind_rows(top3, bottom3) |>
+    dplyr::mutate(
+      viivalabel = dplyr::case_when(
+        ryhma == "Suurin summa" ~ paste0("Suurin ", sijoitus, " · ", lapsijarjestys),
+        TRUE ~ paste0("Pienin ", sijoitus, " · ", lapsijarjestys)
+      ),
+      vanhempi = factor(vanhempi, levels = c("Äiti", "Isä", "Tieto puuttuu")),
+      lapsijarjestys = factor(
+        lapsijarjestys,
+        levels = c("Ensimmäinen lapsi", "Toinen tai myöhempi lapsi", "Lapset yleisesti", "Tieto puuttuu")
+      ),
+      ryhma = factor(ryhma, levels = c("Pienin summa", "Suurin summa"))
+    )
+
+  plot_data <- df_long |>
+    dplyr::filter(!is.na(burden)) |>
+    dplyr::semi_join(selected_ids, by = "respondent_id") |>
+    dplyr::left_join(
+      selected_ids |>
+        dplyr::select(respondent_id, vanhempi, lapsijarjestys, ryhma, viivalabel),
+      by = "respondent_id"
+    )
+
+  label_df <- plot_data |>
+    dplyr::group_by(respondent_id, viivalabel, ryhma) |>
+    dplyr::filter(age_interval_order == max(age_interval_order, na.rm = TRUE)) |>
+    dplyr::summarise(
+      burden = dplyr::first(burden),
+      .groups = "drop"
+    ) |>
+    dplyr::group_by(ryhma) |>
+    dplyr::arrange(burden, .by_group = TRUE) |>
+    dplyr::mutate(label_y = pmin(pmax(burden + c(-0.35, 0, 0.35), 0.25), 9.75)) |>
+    dplyr::ungroup()
+
+  ggplot2::ggplot(
+    plot_data,
+    ggplot2::aes(
+      x = age_interval_order,
+      y = burden,
+      group = respondent_id,
+      color = vanhempi
+    )
+  ) +
+    ggplot2::geom_line(linewidth = 1.2, alpha = 0.95) +
+    ggplot2::geom_point(ggplot2::aes(shape = ryhma), size = 2.6, stroke = 1, fill = col_bg) +
+    ggplot2::geom_text(
+      data = label_df,
+      ggplot2::aes(x = 8.55, y = label_y, label = viivalabel),
+      inherit.aes = FALSE,
+      hjust = 0,
+      size = 3.2,
+      color = col_ink
+    ) +
+    ggplot2::scale_color_manual(
+      values = c(
+        "Äiti" = col_accent,
+        "Isä" = col_neutral,
+        "Tieto puuttuu" = col_dim
+      ),
+      breaks = c("Äiti", "Isä"),
+      limits = c("Äiti", "Isä", "Tieto puuttuu"),
+      name = "Vanhempi"
+    ) +
+    ggplot2::scale_shape_manual(
+      values = c(
+        "Pienin summa" = 1,
+        "Suurin summa" = 16
+      ),
+      breaks = c("Suurin summa", "Pienin summa"),
+      limits = c("Pienin summa", "Suurin summa"),
+      name = "Summa"
+    ) +
+    ggplot2::scale_x_continuous(
+      breaks = seq_along(age_labels_ordered),
+      labels = age_labels_ordered,
+      limits = c(1, 9.6),
+      expand = ggplot2::expansion(mult = c(0.01, 0.02))
+    ) +
+    ggplot2::scale_y_continuous(
+      limits = c(0, 10),
+      breaks = seq(0, 10, by = 2),
+      expand = ggplot2::expansion(mult = c(0.02, 0.05))
+    ) +
+    ggplot2::labs(
+      title = "Suurin vs. pienin pistemäärä",
+      subtitle = "Mukana kolme vastaajaa, joiden kuormitusvastausten summa oli suurin, ja kolme vastaajaa, joiden summa oli pienin.",
+      x = "Lapsen ikä",
+      y = "Kuormitus (0\u201310)",
+      caption = "Mukana vain vastaajat, joilla oli kuormitusvastaus kaikista 8 ikävaiheesta."
+    ) +
+    theme_linkedin() +
+    ggplot2::theme(
+      legend.position = "bottom"
+    ) +
+    ggplot2::coord_cartesian(clip = "off")
+}
+
+save_suurin_vs_pienin_pistemaara_plot <- function(df_long, path = file.path("output", "figures", "suurin_vs_pienin_pistemaara.png")) {
+  p <- plot_suurin_vs_pienin_pistemaara(df_long)
+  save_plot_png(p, path = path, width = 11.8, height = 7.5, dpi = 320)
+  invisible(path)
 }
 
 plot_burden_histogram_faceted <- function(df_long) {

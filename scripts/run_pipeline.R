@@ -26,7 +26,8 @@ required_fns <- c(
   "plot_burden_responses_mean_ci_by_synnytitko",
   "plot_burden_mean_by_mita_lasta",
   "plot_burden_histogram_faceted",
-  "save_taustaprofiili_plot"
+  "save_taustaprofiili_plot",
+  "save_suurin_vs_pienin_pistemaara_plot"
 )
 
 missing_fns <- required_fns[!vapply(required_fns, exists, logical(1), mode = "function", inherits = TRUE)]
@@ -63,13 +64,13 @@ save_main_figures <- function(df_clean, df_long, out_figures_dir = file.path("ou
     list(
       plot = plot_burden_responses_mean_ci_by_synnytitko(df_long),
       path = file.path(out_figures_dir, "is\u00E4_vs_\u00E4iti.png"),
-      width = 12,
+      width = 9.5,
       height = 6
     ),
     list(
       plot = plot_burden_mean_by_mita_lasta(df_long),
       path = file.path(out_figures_dir, "ensimm\u00E4inen_vs_monesko.png"),
-      width = 12,
+      width = 9.5,
       height = 6
     ),
     list(
@@ -87,6 +88,11 @@ save_main_figures <- function(df_clean, df_long, out_figures_dir = file.path("ou
   save_taustaprofiili_plot(
     df_clean,
     path = file.path(out_figures_dir, "taustakysymykset.png")
+  )
+
+  save_suurin_vs_pienin_pistemaara_plot(
+    df_long,
+    path = file.path(out_figures_dir, "suurin_vs_pienin_pistemaara.png")
   )
 
   invisible(out_figures_dir)
