@@ -1,28 +1,38 @@
-# Kyselyn kuormittavuus -analyysiputki
+# Kyselyn kuormittavuus
 
-Tämä projekti tuottaa tiivistetyt taulut ja kuviot kyselyn lapsiperheille suunnatuista hoivakuormitusarvioista ikäjaksoittain.
+Tässä harrasteprojektissa analysoidaan "Lapsiarjen kuormittavuus" -kyselyn vastauksia.
 
-## Raakadatan sijainti
+## Miten analyysi tehdään
 
-Raaka CSV -aineisto odotetaan polussa:
+Analyysi ajetaan yhdellä komennolla:
 
-- `data/raw/forms_responses.csv`
+```powershell
+Rscript .\scripts\run_pipeline.R
+```
 
-Jos tiedostoa ei löydy, käytetään varatiedostoa:
+Putki lukee lomakevastaukset `data/raw/`-kansiosta, muokkaa ne analyysimuotoon ja tuottaa lopuksi taulukot sekä kuviot `output/`-kansioon.
 
-- `data/raw/form_responses.csv.csv`
+## Rakenne
 
-## Miten ajetaan
-
-1. Suorita analyysi putkena:
-   - `Rscript scripts/run_pipeline.R`
-2. Varmista, että kansiot `output/tables` ja `output/figures` ovat luotu ja tiedostot syntyvät.
+- `scripts/00_helpers.R` sisältää apufunktioita ja yhteiset asetukset
+- `scripts/01_load_clean.R` lukee ja puhdistaa lomakevastaukset
+- `scripts/02_reshape_long.R` muotoilee aineiston pitkään muotoon
+- `scripts/03_figures.R` sisältää kuvioiden piirto- ja tallennusfunktiot
+- `scripts/run_pipeline.R` on pääajuri
 
 ## Tuotokset
 
-Projektin ajon jälkeen syntyy:
+Pipeline tuottaa ainakin seuraavat kuviot `output/figures/`-kansioon:
 
-- `output/tables/age_interval_summary.csv` (ikäjaksoittaiset yhteenvetotunnusluvut)
-- `output/figures/01_burden_trajectory_median_iqr.png` (mediaani + IQR)
-- `output/figures/02_burden_variation_spaghetti.png` (yksilölliset arviot + mediaani + IQR)
+- `pääkuva.png`
+- `lämpökartta.png`
+- `isä_vs_äiti.png`
+- `ensimmäinen_vs_monesko.png`
+- `histogrammi.png`
+- `taustakysymykset.png`
+- `sisarus_vs_ei_sisarusta.png`
+- `suurin_vs_pienin_pistemaara.png`
 
+## Tekotapa
+
+Koko koodi on tehty VS Codessa Codexin avulla, enkä kirjoittanut itse yhtään koodiriviä.

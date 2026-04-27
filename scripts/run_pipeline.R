@@ -24,9 +24,11 @@ required_fns <- c(
   "plot_burden_heatmap_mean_median",
   "plot_burden_responses_mean_ci_premium",
   "plot_burden_responses_mean_ci_by_synnytitko",
+  "plot_burden_mean_by_sisarukset",
   "plot_burden_mean_by_mita_lasta",
   "plot_burden_histogram_faceted",
   "save_taustaprofiili_plot",
+  "save_burden_mean_by_sisarukset_plot",
   "save_suurin_vs_pienin_pistemaara_plot"
 )
 
@@ -88,6 +90,11 @@ save_main_figures <- function(df_clean, df_long, out_figures_dir = file.path("ou
   save_taustaprofiili_plot(
     df_clean,
     path = file.path(out_figures_dir, "taustakysymykset.png")
+  )
+
+  save_burden_mean_by_sisarukset_plot(
+    df_long,
+    path = file.path(out_figures_dir, "sisarus_vs_ei_sisarusta.png")
   )
 
   save_suurin_vs_pienin_pistemaara_plot(

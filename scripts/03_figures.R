@@ -142,6 +142,152 @@ plot_burden_responses_mean_ci_by_synnytitko <- function(df_long) {
     theme_linkedin()
 }
 
+plot_burden_mean_by_sisarukset <- function(df_long) {
+  sisarus_labels <- c("Sisarus syntyi", "Ei sisarusta")
+
+  df_plot <- df_long |>
+    dplyr::mutate(
+      sisarus_ryhma = dplyr::case_when(
+        stringr::str_detect(
+          as.character(sisarukset_ennen_3v),
+          stringr::regex("^Kyll", ignore_case = TRUE)
+        ) ~ sisarus_labels[1],
+        stringr::str_detect(
+          as.character(sisarukset_ennen_3v),
+          stringr::regex("^(Ei|En)$", ignore_case = TRUE)
+        ) ~ sisarus_labels[2],
+        TRUE ~ NA_character_
+      ),
+      sisarus_ryhma = factor(sisarus_ryhma, levels = sisarus_labels)
+    ) |>
+    dplyr::filter(
+      !is.na(sisarus_ryhma),
+      !is.na(burden),
+      burden >= 0,
+      burden <= 10
+    )
+
+  group_n <- df_plot |>
+    dplyr::distinct(respondent_id, sisarus_ryhma) |>
+    dplyr::count(sisarus_ryhma, name = "n_total")
+
+  df_stats <- df_plot |>
+    dplyr::group_by(sisarus_ryhma, age_interval_order) |>
+    dplyr::summarise(
+      mean = mean(burden),
+      median = stats::median(burden),
+      n = dplyr::n(),
+      .groups = "drop"
+    ) |>
+    dplyr::left_join(group_n, by = "sisarus_ryhma")
+
+  df_end <- df_stats |>
+    dplyr::group_by(sisarus_ryhma) |>
+    dplyr::slice_max(age_interval_order, n = 1, with_ties = FALSE) |>
+    dplyr::ungroup() |>
+    dplyr::arrange(mean) |>
+    dplyr::mutate(
+      label_y = mean + dplyr::case_when(
+        dplyr::row_number() == 1 ~ -0.10,
+        TRUE ~ 0.10
+      ),
+      label = paste0(as.character(sisarus_ryhma), " (n = ", n_total, ")")
+    )
+
+  pal <- stats::setNames(
+    c(col_accent, col_neutral),
+    sisarus_labels
+  )
+
+  line_types <- stats::setNames(
+    c("solid", "22"),
+    sisarus_labels
+  )
+
+  ggplot2::ggplot(
+    df_stats,
+    ggplot2::aes(
+      x = age_interval_order,
+      y = mean,
+      color = sisarus_ryhma,
+      linetype = sisarus_ryhma,
+      group = sisarus_ryhma
+    )
+  ) +
+    ggplot2::geom_line(linewidth = 2.1, lineend = "round") +
+    ggplot2::geom_point(
+      shape = 21,
+      size = 3.4,
+      fill = col_bg,
+      stroke = 1.4
+    ) +
+    ggplot2::geom_text(
+      data = df_end,
+      ggplot2::aes(
+        x = age_interval_order + 0.20,
+        y = label_y,
+        label = label
+      ),
+      inherit.aes = FALSE,
+      hjust = 0,
+      size = 3.5,
+      fontface = "bold",
+      color = col_ink
+    ) +
+    ggplot2::scale_color_manual(
+      values = pal,
+      breaks = sisarus_labels,
+      name = NULL
+    ) +
+    ggplot2::scale_linetype_manual(
+      values = line_types,
+      breaks = sisarus_labels,
+      name = NULL
+    ) +
+    ggplot2::scale_x_continuous(
+      breaks = seq_along(age_labels_ordered),
+      labels = age_labels_ordered,
+      limits = c(1, 8.85),
+      expand = ggplot2::expansion(mult = c(0.01, 0.02))
+    ) +
+    ggplot2::scale_y_continuous(
+      limits = c(0, 10),
+      breaks = seq(0, 10, by = 2),
+      expand = ggplot2::expansion(mult = c(0.02, 0.05))
+    ) +
+    ggplot2::labs(
+      title = "Kuormitus sen mukaan, syntyikö sisarus ennen 3 vuoden ikää",
+      subtitle = "Keskiarvoviivat (0–10) ryhmittäin. Ei-vastaukset puuttuvaan sisarustietoon rajattu pois.",
+      x = "Lapsen ikä",
+      y = "Kuormitus (0–10)",
+      caption = "Ryhmittely perustuu kysymykseen: Syntyikö sisaruksia ennen 3 vuoden ikää? Sisaruksen tarkkaa syntymäajankohtaa ei kysytty."
+    ) +
+    theme_linkedin() +
+    ggplot2::theme(
+      legend.position = "top",
+      panel.grid.major.x = ggplot2::element_blank(),
+      plot.margin = ggplot2::margin(18, 55, 18, 18)
+    ) +
+    ggplot2::coord_cartesian(clip = "off")
+}
+
+save_burden_mean_by_sisarukset_plot <- function(
+  df_long,
+  path = file.path("output", "figures", "sisarus_vs_ei_sisarusta.png")
+) {
+  p <- plot_burden_mean_by_sisarukset(df_long)
+
+  save_plot_png(
+    plot = p,
+    path = path,
+    width = 8,
+    height = 10,
+    dpi = 320
+  )
+
+  invisible(path)
+}
+
 plot_burden_mean_by_mita_lasta <- function(df_long) {
   labels <- c("Ensimm\u00E4inen lapsi", "Toinen tai my\u00F6hempi lapsi", "Lapset yleisesti")
 

@@ -2,6 +2,13 @@ load_and_clean_survey <- function(
   raw_path = file.path("data", "raw", "form_responses.csv")
 ) {
   if (!file.exists(raw_path)) {
+    fallback_path <- file.path("data", "raw", "forrm_responses.csv")
+    if (file.exists(fallback_path)) {
+      raw_path <- fallback_path
+    }
+  }
+
+  if (!file.exists(raw_path)) {
     stop("Could not find raw CSV at: ", raw_path)
   }
 
