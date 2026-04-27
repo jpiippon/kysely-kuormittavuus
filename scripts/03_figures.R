@@ -5,7 +5,7 @@ age_labels_ordered <- c(
   "12\u201318 kk", "18\u201324 kk", "24\u201330 kk", "30\u201336 kk"
 )
 
-plot_burden_responses_mean_ci_premium <- function(df_long) {
+plot_burden_responses_mean_ci_premium <- function(df_long, extra_subtitle = NULL) {
   df_stats <- df_long |>
     dplyr::filter(!is.na(burden), burden >= 0, burden <= 10) |>
     dplyr::group_by(age_interval_order) |>
@@ -46,7 +46,14 @@ plot_burden_responses_mean_ci_premium <- function(df_long) {
     ggplot2::scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, by = 2)) +
     ggplot2::labs(
       title = "Kuormitus huipentuu vauvan ollessa 3\u20136 kuukautta",
-      subtitle = "Keskiarvo (viiva) ja vaihteluv\u00E4li, johon 90 % vastauksista sijoittuu (punertava varjostus)",
+      subtitle = if (is.null(extra_subtitle)) {
+        "Keskiarvo (viiva) ja vaihteluv\u00E4li, johon 90 % vastauksista sijoittuu (punertava varjostus)"
+      } else {
+        paste0(
+          "Keskiarvo (viiva) ja vaihteluv\u00E4li, johon 90 % vastauksista sijoittuu (punertava varjostus)\n",
+          extra_subtitle
+        )
+      },
       x = "Lapsen ik\u00E4",
       y = "Kuormitus (0\u201310)",
       caption = "Vastaa tutkimuskysymykseen: \"Kuinka kuormittavaksi koit arjen kussakin vaiheessa?\", johon vastattiin asteikolla 0\u201310."
@@ -133,7 +140,7 @@ plot_burden_responses_mean_ci_by_synnytitko <- function(df_long) {
     ggplot2::scale_x_continuous(breaks = seq_along(age_labels_ordered), labels = age_labels_ordered) +
     ggplot2::scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, by = 2)) +
     ggplot2::labs(
-      title = "Vanhempien kokemat erot alkuvaiheen kuormituksesta saattavat yllättää",
+      title = "Vanhempien kokemat erot alkuvaiheen kuormituksesta\nsaattavat yllättää",
       subtitle = "Keskiarvoviivat (0\u201310) ryhmitt\u00E4in.",
       x = "Lapsen ik\u00E4",
       y = "Kuormitus (0\u201310)",
@@ -467,7 +474,7 @@ plot_suurin_vs_pienin_pistemaara <- function(df_long) {
       expand = ggplot2::expansion(mult = c(0.02, 0.05))
     ) +
     ggplot2::labs(
-      title = "Kuormitus jakautuu jyrkästi: kolme raskaimmaksi ja kolme kevyimmäksi kokenutta vastaajaa",
+      title = "Kuormitus jakautuu jyrkästi: kolme raskaimmaksi ja\nkolme kevyimmäksi kokenutta vastaajaa",
       subtitle = "Väri = äiti/isä, viivatyyppi = suurin vs. pienin kokonaispistemäärä.",
       x = "Lapsen ikä",
       y = "Kuormitus (0\u201310)",

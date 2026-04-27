@@ -50,56 +50,67 @@ save_main_figures <- function(df_clean, df_long, out_figures_dir = file.path("ou
     unlink(old_pngs, force = TRUE)
   }
 
+  complete_ids <- df_long |>
+    dplyr::filter(!is.na(burden)) |>
+    dplyr::group_by(respondent_id) |>
+    dplyr::summarise(n_periods = dplyr::n_distinct(age_interval_order), .groups = "drop") |>
+    dplyr::filter(n_periods == 8) |>
+    dplyr::pull(respondent_id)
+
+  df_long_complete <- df_long |>
+    dplyr::semi_join(tibble::tibble(respondent_id = complete_ids), by = "respondent_id")
+
   plot_specs <- list(
     list(
       plot = plot_burden_responses_mean_ci_premium(df_long),
-      path = file.path(out_figures_dir, "p\u00E4\u00E4kuva.png"),
-      width = 9,
-      height = 6
+      path = file.path(out_figures_dir, "01_paakuva.png")
+    ),
+    list(
+      plot = plot_burden_responses_mean_ci_premium(
+        df_long_complete,
+        extra_subtitle = "Herkkyystarkastelu: valittu vain vastaajat, jotka vastasivat jokaiseen ikävaiheeseen"
+      ),
+      path = file.path(out_figures_dir, "herkkyys_paakuva.png")
     ),
     list(
       plot = plot_burden_heatmap_mean_median(df_long),
-      path = file.path(out_figures_dir, "l\u00E4mp\u00F6kartta.png"),
-      width = 7,
-      height = 10
+      path = file.path(out_figures_dir, "02_heatmap.png")
     ),
     list(
       plot = plot_burden_responses_mean_ci_by_synnytitko(df_long),
-      path = file.path(out_figures_dir, "is\u00E4_vs_\u00E4iti.png"),
-      width = 9.5,
-      height = 6
+      path = file.path(out_figures_dir, "03_aidit_vs_isat.png")
     ),
     list(
       plot = plot_burden_mean_by_mita_lasta(df_long),
-      path = file.path(out_figures_dir, "ensimm\u00E4inen_vs_monesko.png"),
-      width = 9.5,
-      height = 6
+      path = file.path(out_figures_dir, "04_monesko_lapsi.png")
+    ),
+    list(
+      plot = plot_taustaprofiili_yhdistetty(df_clean, include_question_caption = TRUE),
+      path = file.path(out_figures_dir, "05_taustaprofiili.png")
     ),
     list(
       plot = plot_burden_histogram_faceted(df_long),
-      path = file.path(out_figures_dir, "histogrammi.png"),
-      width = 12,
-      height = 8
+      path = file.path(out_figures_dir, "histogrammi.png")
+    ),
+    list(
+      plot = plot_burden_mean_by_sisarukset(df_long),
+      path = file.path(out_figures_dir, "sisarus_vs_ei_sisarusta.png")
+    ),
+    list(
+      plot = plot_suurin_vs_pienin_pistemaara(df_long),
+      path = file.path(out_figures_dir, "suurin_vs_pienin_pistemaara.png")
     )
   )
 
+  saved_paths <- character(0)
   for (spec in plot_specs) {
-    save_plot_png(spec$plot, spec$path, width = spec$width, height = spec$height)
+    save_plot_png(spec$plot, spec$path, width = 8, height = 10, dpi = 450)
+    saved_paths <- c(saved_paths, normalizePath(spec$path, winslash = "/", mustWork = FALSE))
   }
 
-  save_taustaprofiili_plot(
-    df_clean,
-    path = file.path(out_figures_dir, "taustakysymykset.png")
-  )
-
-  save_burden_mean_by_sisarukset_plot(
-    df_long,
-    path = file.path(out_figures_dir, "sisarus_vs_ei_sisarusta.png")
-  )
-
-  save_suurin_vs_pienin_pistemaara_plot(
-    df_long,
-    path = file.path(out_figures_dir, "suurin_vs_pienin_pistemaara.png")
+  message(
+    "Tallennetut LinkedIn-kuvat:\n",
+    paste(sprintf("- %s", saved_paths), collapse = "\n")
   )
 
   invisible(out_figures_dir)

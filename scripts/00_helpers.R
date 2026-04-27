@@ -67,7 +67,7 @@ save_table_csv <- function(df, path) {
   readr::write_csv(df, path)
 }
 
-save_plot_png <- function(plot, path, width = 9, height = 7, dpi = 320) {
+save_plot_png <- function(plot, path, width = 8, height = 10, dpi = 450) {
   ensure_utf8_locale()
   dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
 
