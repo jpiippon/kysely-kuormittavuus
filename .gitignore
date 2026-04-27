@@ -10,6 +10,7 @@ old_scripts/
 # Generated report (keep tables/figures, but avoid bulky HTML asset bundles)
 output/report.html
 output/report_files/
+output/figures/suurin_vs_pienin_pistemaara.png
 
 # R/RStudio
 .Rhistory
@@ -22,4 +23,3 @@ output/report_files/
 Thumbs.db
 .vscode/
 .idea/
-

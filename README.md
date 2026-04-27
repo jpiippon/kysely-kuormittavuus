@@ -1,8 +1,10 @@
-# Kyselyn kuormittavuus
+# Lapsiarjen kuormittavuus
 
 Tässä harrasteprojektissa analysoidaan "Lapsiarjen kuormittavuus" -kyselyn vastauksia.
 
-## Miten analyysi tehdään
+> Raakadataa ei julkaista tässä repossa. Kyselyvastaukset on kerätty anonyymisti, ja julkiset kuvat esittävät tulokset koontitasolla. Tulokset ovat kuvailevia eivätkä yleistettävissä väestötasolle.
+
+## Ajo
 
 Analyysi ajetaan yhdellä komennolla:
 
@@ -10,7 +12,13 @@ Analyysi ajetaan yhdellä komennolla:
 Rscript .\scripts\run_pipeline.R
 ```
 
-Putki lukee lomakevastaukset `data/raw/`-kansiosta, muokkaa ne analyysimuotoon ja tuottaa lopuksi taulukot sekä kuviot `output/`-kansioon.
+Putki lukee lomakevastaukset `data/raw/`-kansiosta, muokkaa ne analyysimuotoon ja tuottaa taulukot sekä kuviot `output/`-kansioon.
+
+PDF-karuselli voidaan muodostaa erillisellä komennolla:
+
+```powershell
+Rscript .\scripts\make_linkedin_pdf.R
+```
 
 ## Rakenne
 
@@ -19,20 +27,24 @@ Putki lukee lomakevastaukset `data/raw/`-kansiosta, muokkaa ne analyysimuotoon j
 - `scripts/02_reshape_long.R` muotoilee aineiston pitkään muotoon
 - `scripts/03_figures.R` sisältää kuvioiden piirto- ja tallennusfunktiot
 - `scripts/run_pipeline.R` on pääajuri
+- `scripts/make_linkedin_pdf.R` kokoaa lopullisista PNG-kuvista PDF-karusellin
 
 ## Tuotokset
 
 Pipeline tuottaa ainakin seuraavat kuviot `output/figures/`-kansioon:
 
-- `pääkuva.png`
-- `lämpökartta.png`
-- `isä_vs_äiti.png`
-- `ensimmäinen_vs_monesko.png`
+- `01_paakuva.png`
+- `herkkyys_paakuva.png`
+- `02_heatmap.png`
+- `03_aidit_vs_isat.png`
+- `04_monesko_lapsi.png`
+- `05_taustaprofiili.png`
 - `histogrammi.png`
-- `taustakysymykset.png`
 - `sisarus_vs_ei_sisarusta.png`
 - `suurin_vs_pienin_pistemaara.png`
 
+PDF-karuselli tallentuu kansioon `output/linkedin/` nimellä `linkedin_karuselli_lapsiarki.pdf`.
+
 ## Tekotapa
 
-Koko koodi on tehty VS Codessa Codexin avulla, enkä kirjoittanut itse yhtään koodiriviä.
+Analyysiputki ja kuvat on tuotettu VS Codessa Codexin avulla. Oma roolini oli kysymyksenasettelu, analyysin ohjaus, tulosten tarkistus ja visualisointien iterointi.

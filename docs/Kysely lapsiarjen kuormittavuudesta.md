@@ -1,23 +1,21 @@
-# Kysely lapsiarjen kuormittavuudesta
+# Kyselyrunko: lapsiarjen kuormittavuus
 
-Huomasin joskus, että on yllättävän vaikeaa löytää tietoa siitä, minkä ikäisen lapsen hoito koetaan työläimmäksi. Siksi ajattelin tehdä aiheesta lyhyen kyselyn, jonka vastaukset anonymisoin ja esitän kuvaajassa. Kyse ei ole tieteellisestä tutkimuksesta vaan isyysloman aikaisesta harrasteprojektista.
-
-Vastaaminen ei kestä pitkään. Kaikkien vastaajien kesken arvotaan 10 euron jäätelöpalkinto, jonka Johannes ojentaa voittajalle korkeimman omakätisesti.
+Tämä dokumentti kuvaa kyselyrungon, jota käytettiin lapsiarjen koettua kuormittavuutta koskevassa harrasteprojektissa. Kysely ei ole tieteellinen tutkimus. Vastauksia käsitellään anonyymisti, eikä raakadataa julkaista tässä repossa. Julkiset kuvat esittävät tulokset koontitasolla.
 
 ## Taustakysymykset
 
-1.  **Synnytitkö tarkasteltavan lapsen/lapset?**
-    - kyllä
-    - ei
+1. **Synnytitkö tarkasteltavan lapsen?**
+   - kyllä
+   - ei
 
-2.  **Mitä lasta tämä vastaus koskee?**
-    - ensimmäistä lastani
-    - toista tai myöhempää lastani
-    - lapsiani yleisesti
+2. **Mitä lasta tämä vastaus koskee?**
+   - ensimmäistä lastani
+   - toista tai myöhempää lastani
+   - lapsiani yleisesti
 
-3.  **Syntyikö arvioimillesi lapsille(lapselle) sisaruksia(sisarus) ennen 3v ikää? Tämä voi sekoittaa pakkaa..**
-    - kyllä
-    - ei
+3. **Syntyikö perheeseen sisarus ennen kuin tarkasteltava lapsi täytti 3 vuotta?**
+   - kyllä
+   - ei
 
 ## Varsinainen kysymyspatteri
 
@@ -25,16 +23,16 @@ Kuinka kuormittavaksi koit arjen kussakin vaiheessa?
 
 Vastaa asteikolla 0–10, jossa 0 = ei lainkaan kuormittavaa, 5 = selvästi kuormittavaa mutta hallittavaa ja 10 = äärimmäisen raskasta.
 
-Jos lapsesi ei ole vielä kolmea vuotta, olisi toivottavaa, että vastaat kuitenkin niihin kohtiin, joihin voit. Jos taas muistikuvat ovat hataria, vastaa niihin kohtiin, joihin pystyt vastaamaan edes kohtuullisella varmuudella.
+Jos lapsi ei ole vielä täyttänyt kolmea vuotta, on toivottavaa vastata niihin kohtiin, joihin voit. Jos muistikuva jostakin vaiheesta on hatara, vastaa niin hyvin kuin pystyt.
 
-Arvioi kunkin vaiheen keskimääräistä kuormittavuutta nimenomaan lapsenhoidollisesta työläys-näkökulmasta.
+Arvioi kunkin vaiheen keskimääräistä kuormittavuutta nimenomaan lapsenhoidollisesta näkökulmasta.
 
 - Syntymästä 3 viikon ikään
 - 3 viikon iästä 3 kuukauden ikään
 - 3–6 kk
 - 6–12 kk
-- 1–1,5 vuotta (12-18kk)
-- 1,5–2 vuotta (18-24kk)
-- 2–2,5 vuotta (24-30kk)
-- 2,5–3 vuotta (30kk-36kk)
+- 12–18 kk
+- 18–24 kk
+- 24–30 kk
+- 30–36 kk
 
